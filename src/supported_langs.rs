@@ -798,6 +798,36 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
             signatures: vec![],
             injections: None,
         },
+        LangProfile {
+            name: "Elm",
+            alternate_names: &[],
+            extensions: vec!["elm"],
+            language: tree_sitter_elm::LANGUAGE.into(),
+            atomic_nodes: vec![],
+            commutative_parents: vec![
+                CommutativeParent::new("exposing_list", "exposing (", ", ", ")"),
+                CommutativeParent::without_delimiters("type_declaration", "|")
+                    // Redundant? These are the only kinds of children we can have here, right?
+                    .restricted_to(vec![ChildrenGroup::with_separator(&["union_variant"], "|")]),
+                CommutativeParent::without_delimiters("file", "\n").restricted_to(vec![
+                    ChildrenGroup::new(&["module_declaration"]),
+                    ChildrenGroup::new(&["import_clause"]),
+                    ChildrenGroup::with_separator(&["value_declaration", "type_annotation"], "\n"),
+                ]),
+                CommutativeParent::new("record_pattern", "{", ",", "}"),
+                CommutativeParent::new("let_in_expr", "let\n", "\n", "\nin").restricted_to(vec![
+                    ChildrenGroup::with_separator(&["value_declaration", "type_annotation"], "\n"),
+                ]),
+                // Only make record_type commutative when it's in a type_annotation context
+                // but NOT when it's under a type_alias_declaration
+                CommutativeParent::new("record_type", "{", ", ", "}")
+                    .restricted_to(vec![
+                        ChildrenGroup::with_separator(&["field_type"], ", "),
+                    ]),
+            ],
+            signatures: vec![],
+            injections: None,
+        },
     ]
 });
 
